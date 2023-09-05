@@ -7,14 +7,17 @@ import config
 
 app = FastAPI()
 
+
 class Item(BaseModel):
     imgUrl: str
+
 
 # 테스트용 메서드
 @app.get("/")
 async def test():
     response = 'GET 메서드 실행 완료'
     return {response}
+
 
 # 클로바 OCR
 @app.post("/ocr")
