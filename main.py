@@ -3,9 +3,8 @@ from fastapi import FastAPI
 app = FastAPI()
 
 @app.get("/")
-async def abc():
-    response = ''
-    print('abc')
+async def test():
+    response = 'GET 메서드 실행 완료'
     return {response}
 
 
