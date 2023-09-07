@@ -36,12 +36,18 @@ def get_recommendations_with_new_data(new_data):
 
     results = []
     for index, score in zip(similarProductsIndices, similarityScores):
-        product_id = int(data['ID'].iloc[index])  # int로 변환
+        product_id = int(data['ID'].iloc[index])
+        product_name = data['NAME'].iloc[index]
+        product_price = int(data['PRICE'].iloc[index])
+        product_main_img_url = data['MAIN_IMG_URL'].iloc[index]
         ingredients = data['INGREDIENTS'].iloc[index]
         # 결과를 딕셔너리 형태로 저장
         results.append({
-            "Product ID": product_id,
-            "INGREDIENTS": ingredients,
-            "Similarity": str(round(score * 100, 2)) + "%"
+            "id": product_id,
+            "name": product_name,
+            "price": product_price,
+            "mainImgUrl": product_main_img_url,
+            "ingredients": ingredients,
+            "similarity": str(round(score * 100, 2)) + "%"
         })
     return results
