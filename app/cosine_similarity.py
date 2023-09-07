@@ -3,7 +3,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # 1. 파일 불러오기
-data = pd.read_csv('../PRODUCTS.csv', low_memory=False)
+data = pd.read_csv('PRODUCTS.csv', low_memory=False)
 
 # 2. INGREDIENTS가 Null인 결측값을 빈 값으로 대체
 data['INGREDIENTS'] = data['INGREDIENTS'].fillna('')
