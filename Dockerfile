@@ -10,14 +10,9 @@ COPY ./app /app
 # Copy requirements.txt to the container
 COPY requirements.txt /app
 
-# Copy main.py and PRODUCTS.csv to the container
-COPY main.py /app
-COPY PRODUCTS.csv /app
-
-# Install application dependencies and create/activate a virtual environment
-RUN python3 -m venv venv && \
-    . venv/bin/activate && \
-    pip install --no-cache-dir -r ./requirements.txt
+# Create a virtual environment and install application dependencies
+RUN python3 -m venv venv
+RUN /app/venv/bin/pip install --no-cache-dir -r ./requirements.txt
 
 # Expose port 8000 for the FastAPI application
 EXPOSE 8000
