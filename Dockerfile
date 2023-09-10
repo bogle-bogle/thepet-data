@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy the FastAPI application files to the container
 COPY ./app /app
 
+# Copy requirements.txt to the container
+COPY requirements.txt /app
+
 # Install application dependencies
 RUN pip install --no-cache-dir -r ./requirements.txt
 
