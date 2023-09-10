@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Create and activate a virtual environment
 RUN python3 -m venv venv
-RUN /bin/bash -c "source venv/bin/activate"
+RUN . venv/bin/activate
 
 # Copy the FastAPI application files to the container
 COPY ./app /app
