@@ -2,19 +2,20 @@
 FROM python:3.11-slim
 
 # Set the working directory
-WORKDIR /code
-
-# Copy requirements.txt, main.py, and PRODUCTS.csv to the container
-COPY ./requirements.txt  /code/requirements.txt
-COPY ./main.py  /code/app/main.py
-COPY ./PRODUCTS.csv  /code/app/PRODUCTS.csv
-COPY ./config.py  /code/app/config.py
-
-# Create a virtual environment and install application dependencies
-RUN pip install --no-cache-dir -r /code/requirements.txt
+WORKDIR /app
 
 # Copy the FastAPI application files to the container
-COPY ./app /code/app
+COPY app/ app/
+
+# Copy requirements.txt and other necessary files to the container
+COPY requirements.txt main.py PRODUCTS.csv config.py /app/
+
+# Create a virtual environment and install application dependencies
+RUN python3 -m venv venv
+RUN /app/venv/bin/pip install --no-cache-dir -r /app/requirements.txt
+
+# Expose port 8000 for the FastAPI application
+EXPOSE 8000
 
 # Run the FastAPI application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/venv/bin/uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
