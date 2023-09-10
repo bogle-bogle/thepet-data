@@ -10,13 +10,12 @@ COPY ./app /app
 # Copy requirements.txt, main.py, and PRODUCTS.csv to the container
 COPY requirements.txt main.py PRODUCTS.csv /app/
 
-
 # Create a virtual environment and install application dependencies
 RUN python3 -m venv venv
-RUN /app/venv/bin/pip install --no-cache-dir -r ./requirements.txt
+RUN /app/venv/bin/pip install --no-cache-dir -r /app/requirements.txt
 
 # Expose port 8000 for the FastAPI application
 EXPOSE 8000
 
 # Run the FastAPI application
-CMD ["/app/venv/bin/python", "main.py"]
+CMD ["/app/venv/bin/uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
