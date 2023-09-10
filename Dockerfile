@@ -4,11 +4,6 @@ FROM python:3.11-slim
 # Set the working directory
 WORKDIR /app
 
-
-# Create and activate a virtual environment
-RUN python3 -m venv venv
-RUN . venv/bin/activate
-
 # Copy the FastAPI application files to the container
 COPY ./app /app
 
@@ -19,8 +14,10 @@ COPY requirements.txt /app
 COPY main.py /app
 COPY PRODUCTS.csv /app
 
-# Install application dependencies
-RUN pip install --no-cache-dir -r ./requirements.txt
+# Install application dependencies and create/activate a virtual environment
+RUN python3 -m venv venv && \
+    . venv/bin/activate && \
+    pip install --no-cache-dir -r ./requirements.txt
 
 # Expose port 8000 for the FastAPI application
 EXPOSE 8000
