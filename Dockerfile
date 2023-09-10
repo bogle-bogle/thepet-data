@@ -10,6 +10,10 @@ COPY ./app /app
 # Copy requirements.txt to the container
 COPY requirements.txt /app
 
+# Copy main.py and PRODUCTS.csv to the container
+COPY main.py /app
+COPY PRODUCTS.csv /app
+
 # Install application dependencies
 RUN pip install --no-cache-dir -r ./requirements.txt
 
