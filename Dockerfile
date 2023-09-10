@@ -6,8 +6,8 @@ WORKDIR /code
 
 # Copy requirements.txt, main.py, and PRODUCTS.csv to the container
 COPY ./requirements.txt  /code/requirements.txt
-COPY ./main.py  /app
-COPY ./PRODUCTS.csv  /app
+COPY ./main.py  /code/app
+COPY ./PRODUCTS.csv  /code/app
 
 # Create a virtual environment and install application dependencies
 RUN pip install --no-cache-dir -r /code/requirements.txt
