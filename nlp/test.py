@@ -1,16 +1,13 @@
 import numpy as np
 import pandas as pd
 import pickle
+
 from gensim.models import FastText
 from sklearn.metrics.pairwise import cosine_similarity
 from joblib import Parallel, delayed
 
-# 모델 로드
-model_path = "../model/fasttext_clustered_model.model"
-loaded_model = FastText.load("../model/fasttext_clustered_model.model")
-# 클러스터도 불러오기
-with open("../dataset/ingredient_clusters.pkl", "rb") as file:
-    loaded_clusters = pickle.load(file)
+from config import *
+
 
 # 성분이 앞에 있을 수록 가중치 계산
 def calculate_weighted_vector(ingredients, loaded_model, max_weight=1.0, decay_factor=0.95):
@@ -42,29 +39,30 @@ def calculate_similarity(row, user_vector, ingredient_clusters, loaded_model, we
 
 # 사용자가 입력한 성분 리스트를 바탕으로 유사한 사료를 10개 추천!
 # 제목에 가중치 1.2배 줌
-def recommend_pet_food(user_ingredients, data, ingredient_clusters, weight=1):
-    user_vector = calculate_weighted_vector(user_ingredients, loaded_model).reshape(1, -1)
+def get_most_similar_top_ten(user_ingredients, weight=1):
+    fasttext_loaded_model = FastText.load(FASTTEXT_INGREDIENT_MODEL_PATH)
+    user_vector = calculate_weighted_vector(user_ingredients, fasttext_loaded_model).reshape(1, -1)
+    product_data = pd.read_csv(PRODUCT_RAW_DATA_PATH)
+    with open(INGREDIENT_CLUSTER_PATH, "rb") as file:
+        ingredient_clusters = pickle.load(file)
 
     # 병렬 처리
     similarities = Parallel(n_jobs=-1)(
-        delayed(calculate_similarity)(row, user_vector, ingredient_clusters, loaded_model, weight) for _, row in
-        data.iterrows())
+        delayed(calculate_similarity)(row, user_vector, ingredient_clusters, fasttext_loaded_model, weight) for _, row in
+        product_data.iterrows())
 
     # 유사도가 높은 상위 10개의 사료를 반환
+    result = []
     sorted_recommendations = sorted(similarities, key=lambda x: x[1], reverse=True)[:10]
-    return sorted_recommendations
+    for r in sorted_recommendations:
+        pet_food_info = product_data[product_data['NAME'] == r[0]].iloc[0]
+        result.append({
+            "id": str(pet_food_info['ID']),
+            "name": str(pet_food_info['NAME']),
+            "price": int(pet_food_info['PRICE']),
+            "mainImgUrl": str(pet_food_info['MAIN_IMG_URL']),
+            "ingredients": str(pet_food_info['INGREDIENTS']),
+            "matchRate": "{:.2f}%".format(round(float(r[1]) * 100, 2))
+        })
 
-
-final_cleaned_data_4 = pd.read_csv('../dataset/final_cleaned_data_4.csv')
-user_input_ingredients = ["닭고기", "건조 닭고기", "완두콩", "렌틸콩", "닭 지방", "천연 닭고기 향", "연어 오일", "닭 간", "자연건조 알팔파", "닭 모래주머니",
-                          "아마씨", "닭 연골", "치아씨 오일", "페뉴그릭씨", "호박", "코코넛 오일", "호박씨", "크랜베리", "시금치", "비트", "당근", "스쿼시호박",
-                          "블루베리", "이눌린", "강황", "타임", "세이지", "로즈마리", "토코페롤 철 단백질 화합물", "구리 단백질 화합물", "망간 단백질 화합물",
-                          "아셀렌산 나트륨", "요오드산칼슘", "비타민 E 보충제", "티아민 질산염", "니아신 보충제", "d판토텐산칼슘", "리보플라빈 보충제", "비타민 A 보퉁제",
-                          "비타민 D3 보충제", "비타민 B12 보충제", "피리독신 염산염", "엽산", "소금", "건조 페디오코커스 애시디락티시 발효산물", "건조 락토바실러스 아시도필루스 발효산물",
-                          "건조 비피도박테리움 롱검 발효산물", "건조 바실러스 코아귤런스 발효산물"]
-
-recommendations = recommend_pet_food(user_input_ingredients, final_cleaned_data_4, loaded_clusters)
-for r in recommendations:
-    pet_food_info = final_cleaned_data_4[final_cleaned_data_4['NAME'] == r[0]]
-    ingredients = pet_food_info['INGREDIENTS']
-    print(r, ingredients)
+    return {"ingredients": ", ".join(user_ingredients), "recommendations": result}

@@ -2,14 +2,11 @@ import time
 import uuid
 import requests
 import openai
-import config
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+from config import *
 
 def extract_full_content_with_ocr(item):
     headers = {
-        'X-OCR-SECRET': config.X_OCR_SECRET,
+        'X-OCR-SECRET': X_OCR_SECRET,
         'Content-Type': 'application/json',
     }
     data = {
@@ -25,7 +22,7 @@ def extract_full_content_with_ocr(item):
             }
         ],
     }
-    response = requests.post(config.OCR_URL, headers=headers, json=data)
+    response = requests.post(OCR_URL, headers=headers, json=data)
     response_data = response.json()
 
     if response.status_code != 200 or 'images' not in response_data:
@@ -34,8 +31,8 @@ def extract_full_content_with_ocr(item):
     return ' '.join([field['inferText'] for image in response_data['images'] for field in image['fields']])
 
 def extract_foods_with_gpt(txt):
-    openai.organization = config.OPEN_AI_ORGANIZATION
-    openai.api_key = config.OPENAI_API_KEY
+    openai.organization = OPEN_AI_ORGANIZATION
+    openai.api_key = OPENAI_API_KEY
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[{
@@ -48,3 +45,4 @@ def extract_foods_with_gpt(txt):
         raise Exception("Failed to process GPT request.")
 
     return response['choices'][0]['message']['content']
+
