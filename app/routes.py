@@ -1,7 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+import time
+
+from fastapi import APIRouter
 from pydantic import BaseModel
+
+from nlp.fasttext_unit import get_most_similar_top_ten
 from .utils import extract_full_content_with_ocr, extract_foods_with_gpt
-from .cosine_similarity import get_recommendations_with_new_data
+from nlp.cosine_similarity import get_recommendations_with_new_data
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 
@@ -30,9 +34,26 @@ async def calculate_similarity(item: TxtItem):
     results = get_recommendations_with_new_data(item.content)
     return results
 
-@router.post("/convert-to-similarity")
+@router.post("/convert-to-similarity-simple-cosine")
 async def calculate_img_to_similarity(item: ImgItem):
     ocrResult = extract_full_content_with_ocr(item)
     gptResult = extract_foods_with_gpt(ocrResult)
     finalResult = get_recommendations_with_new_data(gptResult)
     return finalResult
+
+@router.post("/img-to-similarity")
+async def calculate_img_to_similarity(item: ImgItem):
+    start = time.time()
+    ocr_result = extract_full_content_with_ocr(item)
+    final_result = get_most_similar_top_ten(ocr_result.replace(", ", ",").split(","))
+    end = time.time()
+    print("소요 시간 : " + str(end - start))
+    return final_result
+
+@router.post("/txt-to-similarity")
+async def calculate_img_to_similarity(item: TxtItem):
+    start = time.time()
+    final_result = get_most_similar_top_ten(item.content.replace(", ", ",").split(","))
+    end = time.time()
+    print("소요 시간 : " + str(end - start))
+    return final_result
