@@ -9,7 +9,7 @@ def substring_similarity(ingredient, ingredients_list):
             similar_ingredients.append(other_ingredient)
     return similar_ingredients
 
-df = pd.read_csv('ingredient_counts.csv')
+df = pd.read_csv('../dataset/ingredient_counts.csv')
 ingredients_list = df['Ingredient'].tolist()
 
 # pre-trained를 여러 이유로... 사용할 수가 없어서 직접 모델 학습 데이터를 생성해볼거임
@@ -23,7 +23,7 @@ example_clusters = {k: ingredient_clusters[k] for k in list(ingredient_clusters)
 print(example_clusters)
 
 # 클러스터도 저장시켜야 함
-with open("ingredient_clusters.pkl", "wb") as file:
+with open("../dataset/ingredient_clusters.pkl", "wb") as file:
     pickle.dump(ingredient_clusters, file)
 
 

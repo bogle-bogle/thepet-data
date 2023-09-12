@@ -1,16 +1,15 @@
 import numpy as np
 import pandas as pd
 import pickle
-from gensim.models import Word2Vec
 from gensim.models import FastText
 from sklearn.metrics.pairwise import cosine_similarity
 from joblib import Parallel, delayed
 
 # 모델 로드
-model_path = "fasttext_clustered_model.model"
-loaded_model = FastText.load(model_path)
+model_path = "../model/fasttext_clustered_model.model"
+loaded_model = FastText.load("../model/fasttext_clustered_model.model")
 # 클러스터도 불러오기
-with open("ingredient_clusters.pkl", "rb") as file:
+with open("../dataset/ingredient_clusters.pkl", "rb") as file:
     loaded_clusters = pickle.load(file)
 
 # 성분이 앞에 있을 수록 가중치 계산
@@ -56,7 +55,7 @@ def recommend_pet_food(user_ingredients, data, ingredient_clusters, weight=1):
     return sorted_recommendations
 
 
-final_cleaned_data_4 = pd.read_csv('final_cleaned_data_4.csv')
+final_cleaned_data_4 = pd.read_csv('../dataset/final_cleaned_data_4.csv')
 user_input_ingredients = ["닭고기", "건조 닭고기", "완두콩", "렌틸콩", "닭 지방", "천연 닭고기 향", "연어 오일", "닭 간", "자연건조 알팔파", "닭 모래주머니",
                           "아마씨", "닭 연골", "치아씨 오일", "페뉴그릭씨", "호박", "코코넛 오일", "호박씨", "크랜베리", "시금치", "비트", "당근", "스쿼시호박",
                           "블루베리", "이눌린", "강황", "타임", "세이지", "로즈마리", "토코페롤 철 단백질 화합물", "구리 단백질 화합물", "망간 단백질 화합물",
@@ -67,5 +66,5 @@ user_input_ingredients = ["닭고기", "건조 닭고기", "완두콩", "렌틸�
 recommendations = recommend_pet_food(user_input_ingredients, final_cleaned_data_4, loaded_clusters)
 for r in recommendations:
     pet_food_info = final_cleaned_data_4[final_cleaned_data_4['NAME'] == r[0]]
-    ingredients = pet_food_info['INGREDIENTS'].values[0]
+    ingredients = pet_food_info['INGREDIENTS']
     print(r, ingredients)

@@ -3,3 +3,5 @@ config.py
 .idea
 venv
 __pycache__
+model/fasttext_clustered_model.model
+model/fasttext_clustered_model.model.wv.vectors_ngrams.npy
