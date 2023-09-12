@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from .utils import extract_full_content_with_ocr, extract_foods_with_gpt
 from .cosine_similarity import get_recommendations_with_new_data
 
-router = APIRouter()
+router = APIRouter(prefix="/ai", tags=["ai"])
 
 class ImgItem(BaseModel):
     imgUrl: str

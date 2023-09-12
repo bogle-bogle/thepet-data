@@ -48,6 +48,6 @@ def get_recommendations_with_new_data(new_data):
             "price": product_price,
             "mainImgUrl": product_main_img_url,
             "ingredients": ingredients,
-            "similarity": str(round(score * 100, 2)) + "%"
+            "similarity": float(round(score * 100, 2))
         })
     return results
