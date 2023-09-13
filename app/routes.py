@@ -3,9 +3,9 @@ import time
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from nlp.fasttext_unit import get_most_similar_top_ten
+from .nlp.cosine_similarity import get_recommendations_with_new_data
+from .nlp.fasttext_unit import get_most_similar_top_ten
 from .utils import extract_full_content_with_ocr, extract_foods_with_gpt
-from nlp.cosine_similarity import get_recommendations_with_new_data
 
 router = APIRouter(prefix="/ai", tags=["ai"])
 

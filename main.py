@@ -7,11 +7,9 @@ import pandas as pd
 from fastapi import FastAPI
 from gensim.models import FastText
 
+from app.nlp.fasttext_model_trainning import create_ingredient_clusters
 from config import *
 from app import routes
-from nlp.fasttext_model_trainning import create_ingredient_clusters
-from nlp.fasttext_unit import get_most_similar_top_ten
-
 app = FastAPI()
 
 app.include_router(routes.router)
