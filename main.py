@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pickle
-import time
 
 import pandas as pd
 from fastapi import FastAPI

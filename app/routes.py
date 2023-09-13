@@ -3,7 +3,6 @@ import time
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from .nlp.cosine_similarity import get_recommendations_with_new_data
 from .nlp.fasttext_unit import get_most_similar_top_ten
 from .utils import extract_full_content_with_ocr, extract_foods_with_gpt
 
@@ -29,17 +28,17 @@ async def extract_foods_from_img(item: ImgItem):
     gptResult = extract_foods_with_gpt(ocrResult)
     return gptResult
 
-@router.post("/calculate-similarity")
-async def calculate_similarity(item: TxtItem):
-    results = get_recommendations_with_new_data(item.content)
-    return results
+# @router.post("/calculate-similarity")
+# async def calculate_similarity(item: TxtItem):
+#     results = get_recommendations_with_new_data(item.content)
+#     return results
 
-@router.post("/convert-to-similarity-simple-cosine")
-async def calculate_img_to_similarity(item: ImgItem):
-    ocrResult = extract_full_content_with_ocr(item)
-    gptResult = extract_foods_with_gpt(ocrResult)
-    finalResult = get_recommendations_with_new_data(gptResult)
-    return finalResult
+# @router.post("/convert-to-similarity-simple-cosine")
+# async def calculate_img_to_similarity(item: ImgItem):
+#     ocrResult = extract_full_content_with_ocr(item)
+#     gptResult = extract_foods_with_gpt(ocrResult)
+#     finalResult = get_recommendations_with_new_data(gptResult)
+#     return finalResult
 
 @router.post("/img-to-similarity")
 async def calculate_img_to_similarity(item: ImgItem):

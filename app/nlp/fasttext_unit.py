@@ -3,8 +3,8 @@ import pandas as pd
 import pickle
 
 from gensim.models import FastText
-from sklearn.metrics.pairwise import cosine_similarity
 from joblib import Parallel, delayed
+from sklearn.metrics.pairwise import cosine_similarity
 
 from config import *
 
