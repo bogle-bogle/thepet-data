@@ -8,7 +8,7 @@ WORKDIR /app
 COPY app/ app/
 
 # Copy requirements.txt and other necessary files to the container
-COPY requirements.txt main.py PRODUCTS.csv config.py /app/
+COPY requirements.txt main.py config.py /app/
 
 # Create a virtual environment and install application dependencies
 RUN python3 -m venv venv
