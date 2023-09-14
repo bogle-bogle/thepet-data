@@ -1,3 +1,6 @@
+import math
+import time
+
 import numpy as np
 import pandas as pd
 import pickle
@@ -40,6 +43,8 @@ def calculate_similarity(row, user_vector, ingredient_clusters, loaded_model, we
 # 사용자가 입력한 성분 리스트를 바탕으로 유사한 사료를 10개 추천!
 # 제목에 가중치 1.2배 줌
 def get_most_similar_top_ten(user_ingredients, weight=1):
+    start = time.time()
+
     fasttext_loaded_model = FastText.load(FASTTEXT_INGREDIENT_MODEL_PATH)
     user_vector = calculate_weighted_vector(user_ingredients, fasttext_loaded_model).reshape(1, -1)
     product_data = pd.read_csv(PRODUCT_RAW_DATA_PATH)
@@ -64,5 +69,6 @@ def get_most_similar_top_ten(user_ingredients, weight=1):
             "ingredients": str(pet_food_info['INGREDIENTS']),
             "matchRate": "{:.2f}%".format(round(float(r[1]) * 100, 2))
         })
+    end = time.time()
 
-    return {"ingredients": ", ".join(user_ingredients), "recommendations": result}
+    return { "ingredients": ", ".join(user_ingredients), "recommendations": result, "executionTime": str(round((end - start), 2)) + "sec" }
