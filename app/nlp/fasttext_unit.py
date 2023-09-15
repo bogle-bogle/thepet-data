@@ -67,7 +67,7 @@ def get_most_similar_top_ten(user_ingredients, weight=1):
             "price": int(pet_food_info['PRICE']),
             "mainImgUrl": str(pet_food_info['MAIN_IMG_URL']),
             "ingredients": str(pet_food_info['INGREDIENTS']),
-            "matchRate": "{:.2f}%".format(round(float(r[1]) * 100, 2))
+            "matchRate": round(float(r[1]) * 100, 2)
         })
     end = time.time()
 
