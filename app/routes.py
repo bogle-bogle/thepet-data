@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from .nlp.fasttext_unit import get_most_similar_top_ten
+from .nlp.fasttext_unit import get_most_similar_top_nine
 from .utils import extract_full_content_with_ocr, extract_foods_with_gpt
 
 router = APIRouter(prefix="/ai", tags=["ai"])
@@ -41,7 +41,7 @@ async def extract_foods_from_img(item: ImgItem):
 @router.post("/img-to-similarity")
 async def calculate_img_to_similarity(item: ImgItem):
     ocr_result = extract_full_content_with_ocr(item)
-    final_result = get_most_similar_top_ten(ocr_result.replace(", ", ",").split(","))
+    final_result = get_most_similar_top_nine(ocr_result.replace(", ", ",").split(","))
     return final_result
 
 @router.post("/txt-to-similarity")
