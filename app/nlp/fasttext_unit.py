@@ -42,7 +42,7 @@ def calculate_similarity(row, user_vector, ingredient_clusters, loaded_model, we
 
 # 사용자가 입력한 성분 리스트를 바탕으로 유사한 사료를 10개 추천!
 # 제목에 가중치 1.2배 줌
-def get_most_similar_top_ten(user_ingredients, weight=1):
+def get_most_similar_top_nine(user_ingredients, weight=1):
     start = time.time()
 
     fasttext_loaded_model = FastText.load(FASTTEXT_INGREDIENT_MODEL_PATH)
@@ -58,7 +58,7 @@ def get_most_similar_top_ten(user_ingredients, weight=1):
 
     # 유사도가 높은 상위 10개의 사료를 반환
     result = []
-    sorted_recommendations = sorted(similarities, key=lambda x: x[1], reverse=True)[:10]
+    sorted_recommendations = sorted(similarities, key=lambda x: x[1], reverse=True)[:9]
     for r in sorted_recommendations:
         pet_food_info = product_data[product_data['NAME'] == r[0]].iloc[0]
         result.append({
