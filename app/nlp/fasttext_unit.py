@@ -3,30 +3,22 @@ import time
 import numpy as np
 import pandas as pd
 import pickle
-from aws_neuron.neuron_imports import Neuron
-from aws_neuron.neuron_compiler import compile_model
-from aws_neuron.model import Model
+from gensim.models import FastText
 from sklearn.metrics.pairwise import cosine_similarity
 from joblib import Parallel, delayed
 from config import *
 
-# 모델을 Neuron Backend로 변환
-compile_model('fasttext_model', 'fasttext_model.neff')
-
-# Neuron SDK 초기화
-neuron_device = Neuron()
-
 # 미리 모델 로드
-compiled_model = Model('fasttext_model.neff')
-compiled_model.compile(neuron_device)
-
+fasttext_loaded_model = FastText.load(FASTTEXT_INGREDIENT_MODEL_PATH)
 with open(INGREDIENT_CLUSTER_PATH, "rb") as file:
     ingredient_clusters = pickle.load(file)
 
 # 성분이 앞에 있을 수록 가중치 계산
+
+
 def calculate_weighted_vector(ingredients, max_weight=1.0, decay_factor=0.95):
     total_weight = 0
-    weighted_vector = np.zeros(compiled_model.get_input_tensor_shapes()[0][1])  # 입력 크기에 맞게 수정
+    weighted_vector = np.zeros(fasttext_loaded_model.vector_size)
     for idx, ingredient in enumerate(ingredients):
         if ingredient in fasttext_loaded_model.wv:
             weight = max_weight * (decay_factor ** idx)
@@ -34,12 +26,15 @@ def calculate_weighted_vector(ingredients, max_weight=1.0, decay_factor=0.95):
             weighted_vector += weight * fasttext_loaded_model.wv[ingredient]
     return weighted_vector / total_weight
 
-# 병렬 처리 함수 (기존 코드와 동일)
+# 병렬 처리 함수
+
+
 def calculate_similarity_batch(rows, user_vector, weight):
     similarities = []
     for _, row in rows.iterrows():
         pet_food_ingredients = row['INGREDIENTS'].split(', ')
-        pet_food_vector = calculate_weighted_vector(pet_food_ingredients).reshape(1, -1)
+        pet_food_vector = calculate_weighted_vector(
+            pet_food_ingredients).reshape(1, -1)
 
         # 유사도 계산
         similarity = cosine_similarity(user_vector, pet_food_vector)[0][0]
@@ -55,6 +50,8 @@ def calculate_similarity_batch(rows, user_vector, weight):
 
 # 사용자가 입력한 성분 리스트를 바탕으로 유사한 사료를 10개 추천!
 # 제목에 가중치 1.2배 줌
+
+
 def get_most_similar_top_nine(user_ingredients, weight=1):
     start = time.time()
     user_vector = calculate_weighted_vector(user_ingredients).reshape(1, -1)
@@ -74,7 +71,8 @@ def get_most_similar_top_nine(user_ingredients, weight=1):
 
     # 유사도가 높은 상위 10개의 사료를 반환
     result = []
-    sorted_recommendations = sorted(similarities, key=lambda x: x[1], reverse=True)[:9]
+    sorted_recommendations = sorted(
+        similarities, key=lambda x: x[1], reverse=True)[:9]
     for r in sorted_recommendations:
         pet_food_info = product_data[product_data['NAME'] == r[0]].iloc[0]
         result.append({
@@ -86,5 +84,4 @@ def get_most_similar_top_nine(user_ingredients, weight=1):
             "matchRate": round(float(r[1]) * 100, 2)
         })
     end = time.time()
-
-    return { "ingredients": ", ".join(user_ingredients), "recommendations": result, "executionTime": str(round((end - start), 2)) + "sec" }
+    return {"ingredients": ", ".join(user_ingredients), "recommendations": result, "executionTime": str(round((end - start), 2)) + "sec"}
