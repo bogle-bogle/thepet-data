@@ -3,20 +3,30 @@ import time
 import numpy as np
 import pandas as pd
 import pickle
-from gensim.models import FastText
+from aws_neuron.neuron_imports import Neuron
+from aws_neuron.neuron_compiler import compile_model
+from aws_neuron.model import Model
 from sklearn.metrics.pairwise import cosine_similarity
 from joblib import Parallel, delayed
 from config import *
 
+# 모델을 Neuron Backend로 변환
+compile_model('fasttext_model', 'fasttext_model.neff')
+
+# Neuron SDK 초기화
+neuron_device = Neuron()
+
 # 미리 모델 로드
-fasttext_loaded_model = FastText.load(FASTTEXT_INGREDIENT_MODEL_PATH)
+compiled_model = Model('fasttext_model.neff')
+compiled_model.compile(neuron_device)
+
 with open(INGREDIENT_CLUSTER_PATH, "rb") as file:
     ingredient_clusters = pickle.load(file)
 
 # 성분이 앞에 있을 수록 가중치 계산
 def calculate_weighted_vector(ingredients, max_weight=1.0, decay_factor=0.95):
     total_weight = 0
-    weighted_vector = np.zeros(fasttext_loaded_model.vector_size)
+    weighted_vector = np.zeros(compiled_model.get_input_tensor_shapes()[0][1])  # 입력 크기에 맞게 수정
     for idx, ingredient in enumerate(ingredients):
         if ingredient in fasttext_loaded_model.wv:
             weight = max_weight * (decay_factor ** idx)
@@ -24,7 +34,7 @@ def calculate_weighted_vector(ingredients, max_weight=1.0, decay_factor=0.95):
             weighted_vector += weight * fasttext_loaded_model.wv[ingredient]
     return weighted_vector / total_weight
 
-# 병렬 처리 함수
+# 병렬 처리 함수 (기존 코드와 동일)
 def calculate_similarity_batch(rows, user_vector, weight):
     similarities = []
     for _, row in rows.iterrows():
