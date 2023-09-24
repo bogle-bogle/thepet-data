@@ -14,6 +14,8 @@ with open(INGREDIENT_CLUSTER_PATH, "rb") as file:
     ingredient_clusters = pickle.load(file)
 
 # 성분이 앞에 있을 수록 가중치 계산
+
+
 def calculate_weighted_vector(ingredients, max_weight=1.0, decay_factor=0.95):
     total_weight = 0
     weighted_vector = np.zeros(fasttext_loaded_model.vector_size)
@@ -25,6 +27,8 @@ def calculate_weighted_vector(ingredients, max_weight=1.0, decay_factor=0.95):
     return weighted_vector / total_weight
 
 # 병렬 처리 함수
+
+
 def calculate_similarity_batch(rows, user_vector, weight):
     similarities = []
     for _, row in rows.iterrows():
@@ -46,6 +50,8 @@ def calculate_similarity_batch(rows, user_vector, weight):
 
 # 사용자가 입력한 성분 리스트를 바탕으로 유사한 사료를 10개 추천!
 # 제목에 가중치 1.2배 줌
+
+
 def get_most_similar_top_nine(user_ingredients, weight=1):
     start = time.time()
     user_vector = calculate_weighted_vector(user_ingredients).reshape(1, -1)
