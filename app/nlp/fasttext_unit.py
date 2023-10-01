@@ -6,7 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 from concurrent.futures import ThreadPoolExecutor
 import time
 import config
-
+# 수정
 # Load the model and clusters
 model_path = config.FASTTEXT_INGREDIENT_MODEL_PATH
 loaded_model = FastText.load(model_path)
@@ -20,15 +20,19 @@ with open(cluster_path, "rb") as file:
 data_path = config.PRODUCT_RAW_DATA_PATH
 final_cleaned_data_4 = pd.read_csv(data_path)
 
+
 def split_ingredients(ingredient_str):
     return ingredient_str.split(", ")
+
 
 def get_pet_food_vector(row):
     pet_food_ingredients = split_ingredients(row['INGREDIENTS'])
     return calculate_weighted_vector(pet_food_ingredients[:10]).reshape(1, -1)
 
+
 def calculate_similarity(user_vector, pet_food_vector):
     return cosine_similarity(user_vector, pet_food_vector)[0][0]
+
 
 def calculate_weighted_vector(ingredients, max_weight=1.0, decay_factor=0.8):
     total_weight = 0
@@ -38,7 +42,8 @@ def calculate_weighted_vector(ingredients, max_weight=1.0, decay_factor=0.8):
             vector = loaded_model.wv[ingredient]
 
         else:
-            closest_ingredient = min(loaded_clusters.keys(), key=lambda k: loaded_model.wv.similarity(ingredient, k))
+            closest_ingredient = min(loaded_clusters.keys(
+            ), key=lambda k: loaded_model.wv.similarity(ingredient, k))
             vector = loaded_clusters[closest_ingredient]
 
         weight = max_weight * (decay_factor ** idx)
@@ -46,6 +51,7 @@ def calculate_weighted_vector(ingredients, max_weight=1.0, decay_factor=0.8):
         weighted_vector += weight * vector
 
     return weighted_vector / total_weight if total_weight > 0 else weighted_vector
+
 
 def get_most_similar_top_nine(user_ingredients):
     start = time.time()
@@ -65,11 +71,13 @@ def get_most_similar_top_nine(user_ingredients):
 
     similarities_batches = []
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(calculate_similarity_batch, batch) for batch in batches]
+        futures = [executor.submit(calculate_similarity_batch, batch)
+                   for batch in batches]
         for future in futures:
             similarities_batches.extend(future.result())
 
-    sorted_recommendations = sorted(similarities_batches, key=lambda x: x[1], reverse=True)[:9]
+    sorted_recommendations = sorted(
+        similarities_batches, key=lambda x: x[1], reverse=True)[:9]
     result = []
     for r in sorted_recommendations:
         pet_food_info = final_cleaned_data_4[final_cleaned_data_4['NAME'] == r[0]]
