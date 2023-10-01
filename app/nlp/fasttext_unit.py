@@ -1,80 +1,82 @@
-import math
-import time
 import numpy as np
 import pandas as pd
 import pickle
 from gensim.models import FastText
 from sklearn.metrics.pairwise import cosine_similarity
-from joblib import Parallel, delayed
-from config import *
+from concurrent.futures import ThreadPoolExecutor
+import time
+import config
 
-# 미리 모델 로드
-fasttext_loaded_model = FastText.load(FASTTEXT_INGREDIENT_MODEL_PATH)
-with open(INGREDIENT_CLUSTER_PATH, "rb") as file:
-    ingredient_clusters = pickle.load(file)
+# Load the model and clusters
+model_path = config.FASTTEXT_INGREDIENT_MODEL_PATH
+loaded_model = FastText.load(model_path)
 
-# 성분이 앞에 있을 수록 가중치 계산
-def calculate_weighted_vector(ingredients, max_weight=1.0, decay_factor=0.95):
+# 클러스터 로드
+cluster_path = config.INGREDIENT_CLUSTER_PATH
+with open(cluster_path, "rb") as file:
+    loaded_clusters = pickle.load(file)
+
+# Load the data frame
+data_path = config.PRODUCT_RAW_DATA_PATH
+final_cleaned_data_4 = pd.read_csv(data_path)
+
+def split_ingredients(ingredient_str):
+    return ingredient_str.split(", ")
+
+def get_pet_food_vector(row):
+    pet_food_ingredients = split_ingredients(row['INGREDIENTS'])
+    return calculate_weighted_vector(pet_food_ingredients[:10]).reshape(1, -1)
+
+def calculate_similarity(user_vector, pet_food_vector):
+    return cosine_similarity(user_vector, pet_food_vector)[0][0]
+
+def calculate_weighted_vector(ingredients, max_weight=1.0, decay_factor=0.8):
     total_weight = 0
-    weighted_vector = np.zeros(fasttext_loaded_model.vector_size)
-    for idx, ingredient in enumerate(ingredients):
-        if ingredient in fasttext_loaded_model.wv:
-            weight = max_weight * (decay_factor ** idx)
-            total_weight += weight
-            weighted_vector += weight * fasttext_loaded_model.wv[ingredient]
-    return weighted_vector / total_weight
+    weighted_vector = np.zeros(loaded_model.vector_size)
+    for idx, ingredient in enumerate(ingredients[:10]):
+        if ingredient in loaded_model.wv:
+            vector = loaded_model.wv[ingredient]
 
-# 병렬 처리 함수
-def calculate_similarity_batch(rows, user_vector, weight):
-    similarities = []
-    for _, row in rows.iterrows():
-        pet_food_ingredients = row['INGREDIENTS'].split(', ')
-        pet_food_vector = calculate_weighted_vector(
-            pet_food_ingredients).reshape(1, -1)
+        else:
+            closest_ingredient = min(loaded_clusters.keys(), key=lambda k: loaded_model.wv.similarity(ingredient, k))
+            vector = loaded_clusters[closest_ingredient]
 
-        # 유사도 계산
-        similarity = cosine_similarity(user_vector, pet_food_vector)[0][0]
+        weight = max_weight * (decay_factor ** idx)
+        total_weight += weight
+        weighted_vector += weight * vector
 
-        # 사료 제목에서 ingredient_clusters의 단어가 포함된 경우 가중치를 부여
-        for ingredient in ingredient_clusters:
-            if any(clustered_ingredient in row['NAME'] for clustered_ingredient in ingredient_clusters[ingredient]):
-                similarity *= weight
-                # break  # 하나라도 있으면 break
+    return weighted_vector / total_weight if total_weight > 0 else weighted_vector
 
-        similarities.append((row['NAME'], similarity))
-    return similarities
-
-# 사용자가 입력한 성분 리스트를 바탕으로 유사한 사료를 10개 추천!
-# 제목에 가중치 1.2배 줌
-def get_most_similar_top_nine(user_ingredients, weight=1):
+def get_most_similar_top_nine(user_ingredients):
     start = time.time()
     user_vector = calculate_weighted_vector(user_ingredients).reshape(1, -1)
-    product_data = pd.read_csv(PRODUCT_RAW_DATA_PATH)
 
-    # 데이터를 작은 배치로 분할
-    batch_size = 100  # 적절한 배치 크기를 선택하세요.
-    num_batches = len(product_data) // batch_size + 1
-    batches = np.array_split(product_data, num_batches)
+    def calculate_similarity_batch(rows):
+        similarities_batch = []
+        for _, row in rows.iterrows():
+            pet_food_vector = get_pet_food_vector(row)
+            similarity = calculate_similarity(user_vector, pet_food_vector)
+            similarities_batch.append((row['NAME'], similarity))
+        return similarities_batch
 
-    # 병렬 처리
-    similarities = Parallel(n_jobs=-1)(
-        delayed(calculate_similarity_batch)(batch, user_vector, weight) for batch in batches)
+    batch_size = 50
+    num_batches = len(final_cleaned_data_4) // batch_size + 1
+    batches = np.array_split(final_cleaned_data_4, num_batches)
 
-    # 병렬 처리 결과를 평탄화
-    similarities = [item for sublist in similarities for item in sublist]
+    similarities_batches = []
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(calculate_similarity_batch, batch) for batch in batches]
+        for future in futures:
+            similarities_batches.extend(future.result())
 
-    # 유사도가 높은 상위 10개의 사료를 반환
+    sorted_recommendations = sorted(similarities_batches, key=lambda x: x[1], reverse=True)[:9]
     result = []
-    sorted_recommendations = sorted(
-        similarities, key=lambda x: x[1], reverse=True)[:9]
     for r in sorted_recommendations:
-        pet_food_info = product_data[product_data['NAME'] == r[0]].iloc[0]
+        pet_food_info = final_cleaned_data_4[final_cleaned_data_4['NAME'] == r[0]]
+        ingredients = pet_food_info['INGREDIENTS'].values[0]
         result.append({
-            "id": str(pet_food_info['ID']),
-            "name": str(pet_food_info['NAME']),
-            "price": int(pet_food_info['PRICE']),
-            "mainImgUrl": str(pet_food_info['MAIN_IMG_URL']),
-            "ingredients": str(pet_food_info['INGREDIENTS']),
+            "name": str(r[0]),
+            "ingredients": str(ingredients),
             "matchRate": round(float(r[1]) * 100, 2)
         })
     end = time.time()
