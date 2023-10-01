@@ -3,6 +3,7 @@ import uuid
 import requests
 import openai
 from config import *
+import re
 
 def extract_full_content_with_ocr(item):
     headers = {
@@ -28,7 +29,27 @@ def extract_full_content_with_ocr(item):
     if response.status_code != 200 or 'images' not in response_data:
         raise Exception("Failed to process OCR request.")
 
-    return ' '.join([field['inferText'] for image in response_data['images'] for field in image['fields']])
+    extracted_text = ' '.join([field['inferText'] for image in response_data['images'] for field in image['fields']])
+    
+    # 추출된 텍스트를 활용하거나 반환할 수 있음
+    print(extracted_text)
+    ingredient_text = ""
+    start_index = extracted_text.find("사용한 원료의 명칭: ")
+    if start_index != -1:
+        start_index += len("사용한 원료의 명칭: ")
+        ingredient_text = extracted_text[start_index:]
+        input_string = ingredient_text.replace(" ", "")
+        input_string = re.sub(r'\([^)]*\)', '', input_string)
+        input_string = re.sub(r'[^\w\s,]', '', input_string)
+        input_string = re.sub(r'\s+', ' ', input_string)  # 중복 공백을 단일 공백으로 바꿈
+        input_string = re.sub(r'\s,', ',', input_string)  # 띄어쓰기와 쉼표를 쉼표로 대체
+        input_string = input_string.replace(",", ", ")
+        print(input_string)
+        print(input_string.replace(", ", ",").split(","))
+    else:
+        print("사용한 원료의 명칭을 찾을 수 없습니다.")
+        
+    return input_string
 
 def extract_foods_with_gpt(txt):
     openai.organization = OPEN_AI_ORGANIZATION
