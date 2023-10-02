@@ -32,7 +32,6 @@ def extract_full_content_with_ocr(item):
     extracted_text = ' '.join([field['inferText'] for image in response_data['images'] for field in image['fields']])
     
     # 추출된 텍스트를 활용하거나 반환할 수 있음
-    print(extracted_text)
     ingredient_text = ""
     start_index = extracted_text.find("사용한 원료의 명칭: ")
     if start_index != -1:

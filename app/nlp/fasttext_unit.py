@@ -80,10 +80,10 @@ def get_most_similar_top_nine(user_ingredients):
         similarities_batches, key=lambda x: x[1], reverse=True)[:9]
     result = []
     for r in sorted_recommendations:
-        pet_food_info = final_cleaned_data_4[final_cleaned_data_4['NAME'] == r[0]]
-        ingredients = pet_food_info['INGREDIENTS'].values[0]
+        pet_food_info = final_cleaned_data_4[final_cleaned_data_4['NAME'] == r[0]].iloc[0]
+        ingredients = pet_food_info['INGREDIENTS']
         result.append({
-           "id": str(pet_food_info['ID']),
+            "id": str(pet_food_info['ID']),
             "name": str(pet_food_info['NAME']),
             "price": int(pet_food_info['PRICE']),
             "mainImgUrl": str(pet_food_info['MAIN_IMG_URL']),
