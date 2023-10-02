@@ -83,8 +83,11 @@ def get_most_similar_top_nine(user_ingredients):
         pet_food_info = final_cleaned_data_4[final_cleaned_data_4['NAME'] == r[0]]
         ingredients = pet_food_info['INGREDIENTS'].values[0]
         result.append({
-            "name": str(r[0]),
-            "ingredients": str(ingredients),
+           "id": str(pet_food_info['ID']),
+            "name": str(pet_food_info['NAME']),
+            "price": int(pet_food_info['PRICE']),
+            "mainImgUrl": str(pet_food_info['MAIN_IMG_URL']),
+            "ingredients": str(pet_food_info['INGREDIENTS']),
             "matchRate": round(float(r[1]) * 100, 2)
         })
     end = time.time()
