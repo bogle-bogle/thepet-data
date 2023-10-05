@@ -31,22 +31,33 @@ def extract_full_content_with_ocr(item):
 
     extracted_text = ' '.join([field['inferText'] for image in response_data['images'] for field in image['fields']])
     
-    # 추출된 텍스트를 활용하거나 반환할 수 있음
+    # 다양한 시작 패턴 리스트
+    start_patterns = ["사용한 원료의 명칭", "원료", "등록성분 주원료", "원재료명 및 함량","제조원료","사용한 원료의 명칭:", "원료:", "등록성분 주원료:", "원재료명 및 함량:","제조원료:","(사용한 원료의 명칭)", "(원료)", "(등록성분 주원료)", "(원재료명 및 함량)","(제조원료)"]
+
     ingredient_text = ""
-    start_index = extracted_text.find("사용한 원료의 명칭: ")
-    if start_index != -1:
-        start_index += len("사용한 원료의 명칭: ")
-        ingredient_text = extracted_text[start_index:]
-        input_string = ingredient_text.replace(" ", "")
-        input_string = re.sub(r'\([^)]*\)', '', input_string)
-        input_string = re.sub(r'[^\w\s,]', '', input_string)
-        input_string = re.sub(r'\s+', ' ', input_string)  # 중복 공백을 단일 공백으로 바꿈
-        input_string = re.sub(r'\s,', ',', input_string)  # 띄어쓰기와 쉼표를 쉼표로 대체
-        input_string = input_string.replace(",", ", ")
-        print(input_string)
-        print(input_string.replace(", ", ",").split(","))
-    else:
-        print("사용한 원료의 명칭을 찾을 수 없습니다.")
+    start_index = -1
+    print(extracted_text)
+    # 여러 시작 패턴을 반복하여 검색
+    for pattern in start_patterns:
+        start_index = extracted_text.find(pattern)
+        if start_index != -1:
+            start_index += len(pattern)
+            ingredient_text = extracted_text[start_index:]
+            break
+
+    # 시작 패턴을 찾지 못한 경우 처리
+    if start_index == -1:
+        print("시작 패턴을 찾을 수 없습니다.")
+        ingredient_text=extracted_text
+
+    input_string = ingredient_text.replace(" ", "")
+    input_string = re.sub(r'\([^)]*\)', '', input_string)
+    input_string = re.sub(r'[^\w\s,]', '', input_string)
+    input_string = re.sub(r'\s+', ' ', input_string)  # 중복 공백을 단일 공백으로 바꿈
+    input_string = re.sub(r'\s,', ',', input_string)  # 띄어쓰기와 쉼표를 쉼표로 대체
+    input_string = input_string.replace(",", ", ")
+    print(input_string)
+    print(input_string.replace(", ", ",").split(","))
         
     return input_string
 
