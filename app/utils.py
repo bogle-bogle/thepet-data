@@ -5,6 +5,7 @@ import openai
 from config import *
 import re
 
+
 def extract_full_content_with_ocr(item):
     headers = {
         'X-OCR-SECRET': X_OCR_SECRET,
@@ -29,10 +30,12 @@ def extract_full_content_with_ocr(item):
     if response.status_code != 200 or 'images' not in response_data:
         raise Exception("Failed to process OCR request.")
 
-    extracted_text = ' '.join([field['inferText'] for image in response_data['images'] for field in image['fields']])
-    
+    extracted_text = ' '.join(
+        [field['inferText'] for image in response_data['images'] for field in image['fields']])
+
     # 다양한 시작 패턴 리스트
-    start_patterns = ["사용한 원료의 명칭", "원료", "등록성분 주원료", "원재료명 및 함량","제조원료","사용한 원료의 명칭:", "원료:", "등록성분 주원료:", "원재료명 및 함량:","제조원료:","(사용한 원료의 명칭)", "(원료)", "(등록성분 주원료)", "(원재료명 및 함량)","(제조원료)"]
+    start_patterns = ["사용한 원료의 명칭", "원료", "사용원료", "사용한 원료", "등록성분 주원료", "원재료명 및 함량", "제조원료", "사용한 원료의 명칭:", "원료:",
+                      "사용원료:", "등록성분 주원료:", "원재료명 및 함량:", "제조원료:", "(사용한 원료의 명칭)", "(원료)", "(사용원료)", "(등록성분 주원료)", "(원재료명 및 함량)", "(제조원료)"]
 
     ingredient_text = ""
     start_index = -1
@@ -48,7 +51,7 @@ def extract_full_content_with_ocr(item):
     # 시작 패턴을 찾지 못한 경우 처리
     if start_index == -1:
         print("시작 패턴을 찾을 수 없습니다.")
-        ingredient_text=extracted_text
+        ingredient_text = extracted_text
 
     input_string = ingredient_text.replace(" ", "")
     input_string = re.sub(r'\([^)]*\)', '', input_string)
@@ -58,8 +61,9 @@ def extract_full_content_with_ocr(item):
     input_string = input_string.replace(",", ", ")
     print(input_string)
     print(input_string.replace(", ", ",").split(","))
-        
+
     return input_string
+
 
 def extract_foods_with_gpt(txt):
     openai.organization = OPEN_AI_ORGANIZATION
@@ -76,4 +80,3 @@ def extract_foods_with_gpt(txt):
         raise Exception("Failed to process GPT request.")
 
     return response['choices'][0]['message']['content']
-

@@ -92,4 +92,4 @@ def get_most_similar_top_nine(user_ingredients):
         })
     end = time.time()
     ingredients_str = ", ".join(user_ingredients)
-    return {"ingredients": ingredients_str, "suggestions": result, "executionTime": str(round((end - start), 2)) + "sec"}
+    return {"suggestions": result, "executionTime": str(round((end - start), 2)) + "sec"}
